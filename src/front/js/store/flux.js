@@ -13,14 +13,62 @@ const getState = ({ getStore, getActions, setStore }) => {
 					background: "white",
 					initial: "white"
 				}
-			]
+			],
+			customerIsLogedIn:[],
+			token:[],
+
 		},
 		actions: {
 			// Use getActions to call a function within a fuction
 			exampleFunction: () => {
 				getActions().changeColor(0, "green");
 			},
-
+			setToken: (token) => {
+				setStore({ token: token });
+				setStore({ customerIsLogedIn: true });
+				localStorage.setItem("token", token); // Almacena el token
+			},
+			customerLogout: () => {
+				setStore({ token: null });
+				setStore({ customerIsLogedIn: false });
+				localStorage.removeItem("token");  // Limpiar el token del localStorage
+			},
+			verifyCustomerToken: () => {
+				const token = localStorage.getItem("token");
+				if (token) {
+					setStore({ customerIsLogedIn: true });
+				} else {
+					setStore({ customerIsLogedIn: false });
+				}
+			},
+			createCustomer: (newCustomer) => {
+				const raw = JSON.stringify({
+					"email": newCustomer.email,
+					"password": newCustomer.password,
+				});
+			
+				const requestOptions = {
+					method: "POST",
+					body: raw,
+					headers: {
+						"Content-type": "application/json",
+					}
+				};
+			
+				fetch(process.env.BACKEND_URL + "/api/customers", requestOptions)
+					.then((response) => {
+						if (!response.ok) {
+							throw new Error("No se pudo registrar el cliente");
+						}
+						return response.json();
+					})
+					.then((result) => {
+						console.log(result);
+						// Opcional: Guarda el token si es necesario
+					})
+					.catch((error) => console.error("Error en la creación del cliente:", error));
+			},
+			
 			getMessage: async () => {
 				try{
 					// fetching data from the backend
